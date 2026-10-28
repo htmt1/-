@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>ばにぼ</title>
+<style>
+:root{color-scheme:light dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:16px;background:Canvas;color:CanvasText;font-family:system-ui,sans-serif}
+textarea{display:block;width:100%;max-width:100%;box-sizing:border-box;height:9em;font-size:16px;margin:0 0 12px}
+</style>
+</head>
+<body>
+<textarea id="t" placeholder="ふつうの文字"></textarea>
+<textarea id="e" placeholder="絵文字"></textarea>
+<script>
+const T=['\u{1F3FB}','\u{1F3FC}','\u{1F3FD}','\u{1F3FE}','\u{1F3FF}'];
+const R=["あいうえお","かきくけこ","さしすせそ","たちつてと","なにぬねの","はひふへほ","まみむめも","や、ゆ。よ","らりるれろ","わゐんゑを","がぎぐげご","ざじずぜぞ","だぢづでど","ばびぶべぼ","ぱぴぷぺぽ","ぁぃぅぇぉ","ゃっゅーょ","ABCDE","FGHIJ","KLMNO","PQRST","UVWXY","Z ?!.","01234","56789"];
+const pair=i=>'\u{1F46F}'+T[i]+'\u200D\u2642\uFE0F';
+const row=k=>{const l=Math.floor(k/5),r=k%5;return l===r?pair(l):'\u{1F468}'+T[l]+'\u200D\u{1F430}\u200D\u{1F468}'+T[r]};
+const strip=s=>s.replace(/\uFE0F/g,'');
+const enc=new Map(),dec=new Map();
+R.forEach((s,k)=>[...s].forEach((c,v)=>{const code=row(k)+pair(v);enc.set(c,code);dec.set(strip(code),c)}));
+const encode=s=>[...s.normalize('NFKC').toUpperCase().replace(/[\u30A1-\u30F6]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60))].map(c=>enc.get(c)??c).join('');
+const seg=new Intl.Segmenter('ja',{granularity:'grapheme'});
+const decode=s=>{
+const g=[...seg.segment(s)].map(x=>x.segment);
+let out='',i=0;
+while(i<g.length){
+const k=strip(g[i]+(g[i+1]??''));
+if(dec.has(k)){out+=dec.get(k);i+=2}
+else{if(!/^[ \u3000\t]$/.test(g[i]))out+=g[i];i++}
+}
+return out;
+};
+const t=document.getElementById('t'),e=document.getElementById('e');
+t.addEventListener('input',()=>{e.value=encode(t.value)});
+e.addEventListener('input',()=>{t.value=decode(e.value)});
+</script>
+</body>
+</html>
